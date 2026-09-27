@@ -1,0 +1,38 @@
+name: Security Finding
+description: Report a security issue (non-critical; for critical issues email directly)
+labels: ["security", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **For critical vulnerabilities (RCE, token forgery, identity impersonation), do NOT use this form.**
+        Email kogunlowo@gmail.com with subject [SECURITY] instead.
+
+        This form is for lower-severity security improvements and hardening suggestions.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options: [Low, Medium, High]
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Finding Description
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+    validations:
+      required: true
+
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Suggested Mitigation

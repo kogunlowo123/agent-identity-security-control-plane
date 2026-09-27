@@ -1,0 +1,40 @@
+processors:
+  attributes/pii_scrub:
+    actions:
+      - key: user.email
+        action: delete
+      - key: user.phone
+        action: delete
+      - key: user.ssn
+        action: delete
+      - key: http.request.header.authorization
+        action: hash
+      - key: db.statement
+        pattern: "(?i)(password|secret|token|key)\\s*=\\s*'[^']*'"
+        action: update
+        value: "[REDACTED]"
+
+  transform/pii_scrub_spans:
+    trace_statements:
+      - context: span
+        statements:
+          - replace_pattern(attributes["http.url"], "token=[^&]+", "token=[REDACTED]")
+          - replace_pattern(attributes["http.url"], "key=[^&]+", "key=[REDACTED]")
+
+service:
+  pipelines:
+    traces:
+      processors:
+        - memory_limiter
+        - attributes/pii_scrub
+        - transform/pii_scrub_spans
+        - batch
+    metrics:
+      processors:
+        - memory_limiter
+        - batch
+    logs:
+      processors:
+        - memory_limiter
+        - attributes/pii_scrub
+        - batch

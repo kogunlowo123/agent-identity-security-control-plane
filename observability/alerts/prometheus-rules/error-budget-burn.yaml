@@ -1,0 +1,56 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aicp-error-budget-burn
+  namespace: aicp
+  labels:
+    prometheus: aicp
+    role: alert-rules
+spec:
+  groups:
+    - name: aicp.error-budget-burn
+      rules:
+        - alert: AICPFastErrorBudgetBurn
+          expr: |
+            (
+              sum(rate(http_requests_total{job="aicp-api",code=~"5.."}[2h]))
+              /
+              sum(rate(http_requests_total{job="aicp-api"}[2h]))
+            ) > 0.02
+          for: 2m
+          labels:
+            severity: critical
+            team: security-platform
+          annotations:
+            summary: "Fast error budget burn detected"
+            description: "Error rate > 2% over 2h window. SLO at risk."
+
+        - alert: AICPSlowErrorBudgetBurn
+          expr: |
+            (
+              sum(rate(http_requests_total{job="aicp-api",code=~"5.."}[6h]))
+              /
+              sum(rate(http_requests_total{job="aicp-api"}[6h]))
+            ) > 0.01
+          for: 10m
+          labels:
+            severity: warning
+            team: security-platform
+          annotations:
+            summary: "Slow error budget burn detected"
+            description: "Error rate > 1% over 6h window."
+
+        - alert: AICPIdentityIssuanceFailureRate
+          expr: |
+            (
+              sum(rate(aicp_identity_issuance_total{outcome="denied"}[5m]))
+              /
+              sum(rate(aicp_identity_issuance_total[5m]))
+            ) > 0.1
+          for: 5m
+          labels:
+            severity: warning
+            team: security-platform
+          annotations:
+            summary: "High identity issuance denial rate"
+            description: "More than 10% of identity issuance requests are being denied."

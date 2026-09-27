@@ -1,0 +1,20 @@
+anchore:
+  output:
+    - spdx-json
+    - cyclonedx-json
+  file: sbom.json
+
+search:
+  scope: all-layers
+
+catalogers:
+  - python-package-cataloger
+  - python-installed-package-cataloger
+  - debian-package-cataloger
+  - rpm-package-cataloger
+  - apk-package-cataloger
+  - go-module-file-cataloger
+  - go-installed-binary-cataloger
+
+log:
+  level: warn

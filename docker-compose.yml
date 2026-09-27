@@ -1,0 +1,210 @@
+version: "3.9"
+
+services:
+  # ── Infrastructure ────────────────────────────────────────────────────────
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: aicp-postgres
+    environment:
+      POSTGRES_USER: aicp_user
+      POSTGRES_PASSWORD: aicp_pass
+      POSTGRES_DB: aicp_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./identity/session/ledger-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aicp_user -d aicp_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aicp-net
+
+  opensearch:
+    image: opensearchproject/opensearch:2.12.0
+    container_name: aicp-opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Admin@1234!
+      - plugins.security.disabled=true
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -E '\"status\":\"(green|yellow)\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - aicp-net
+
+  opa:
+    image: openpolicyagent/opa:0.63.0
+    container_name: aicp-opa
+    command:
+      - run
+      - --server
+      - --log-level=info
+      - --log-format=json
+      - --addr=0.0.0.0:8181
+      - /bundles
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./identity/authorization/opa:/bundles:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8181/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aicp-net
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: aicp-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aicp-net
+
+  # ── Application Services ──────────────────────────────────────────────────
+
+  broker:
+    build:
+      context: ./identity/issuance/broker
+      dockerfile: Dockerfile
+    container_name: aicp-broker
+    env_file: .env
+    environment:
+      - APP_ENV=development
+      - OPA_URL=http://opa:8181
+      - REDIS_URL=redis://redis:6379/0
+    ports:
+      - "8100:8100"
+    depends_on:
+      opa:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8100/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aicp-net
+
+  rag-core:
+    build:
+      context: ./services/rag-core
+      dockerfile: Dockerfile
+    container_name: aicp-rag-core
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://aicp_user:aicp_pass@postgres:5432/aicp_db
+      - OPENSEARCH_URL=http://opensearch:9200
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8200/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aicp-net
+
+  agent-runtime:
+    build:
+      context: ./services/agent-runtime
+      dockerfile: Dockerfile
+    container_name: aicp-agent-runtime
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://aicp_user:aicp_pass@postgres:5432/aicp_db
+      - RAG_CORE_URL=http://rag-core:8200
+      - BROKER_URL=http://broker:8100
+      - OPA_URL=http://opa:8181
+      - REDIS_URL=redis://redis:6379/2
+    depends_on:
+      rag-core:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8300/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aicp-net
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: aicp-api
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://aicp_user:aicp_pass@postgres:5432/aicp_db
+      - BROKER_URL=http://broker:8100
+      - OPA_URL=http://opa:8181
+      - AGENT_RUNTIME_URL=http://agent-runtime:8300
+      - REDIS_URL=redis://redis:6379/3
+    ports:
+      - "8000:8000"
+    depends_on:
+      broker:
+        condition: service_healthy
+      agent-runtime:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aicp-net
+
+  # ── Observability ─────────────────────────────────────────────────────────
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.98.0
+    container_name: aicp-otel-collector
+    command: ["--config=/etc/otel/collector.yaml"]
+    volumes:
+      - ./observability/otel/collector.yaml:/etc/otel/collector.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics
+    networks:
+      - aicp-net
+
+volumes:
+  postgres_data:
+  opensearch_data:
+  redis_data:
+
+networks:
+  aicp-net:
+    driver: bridge

@@ -1,0 +1,58 @@
+replicaCount: 2
+
+image:
+  repository: gcr.io/aicp-project/agent-runtime
+  pullPolicy: IfNotPresent
+  tag: "0.1.0"
+
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: agent-runtime@aicp-project.iam.gserviceaccount.com
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+env:
+  BROKER_URL: "http://identity-broker:8082"
+  OPA_URL: "http://opa:8181"
+  RAG_CORE_URL: "http://rag-core:8083"
+  LOG_LEVEL: "INFO"
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 15
+  periodSeconds: 20
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

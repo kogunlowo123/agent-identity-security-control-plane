@@ -1,0 +1,52 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged-containers
+  annotations:
+    policies.kyverno.io/title: Disallow Privileged Containers
+    policies.kyverno.io/description: >-
+      Privileged containers bypass most Kubernetes security controls.
+      All AICP containers must run as non-privileged, non-root users.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: no-privileged
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [aicp]
+      validate:
+        message: "Privileged containers are not allowed in the aicp namespace."
+        pattern:
+          spec:
+            containers:
+              - =(securityContext):
+                  =(privileged): "false"
+
+    - name: no-host-path
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [aicp]
+      validate:
+        message: "HostPath volumes are not allowed."
+        pattern:
+          spec:
+            =(volumes):
+              - =(hostPath): "null"
+
+    - name: require-non-root
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [aicp]
+      validate:
+        message: "Containers must run as non-root."
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true

@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aicp-rag-core"
+version = "0.1.0"
+description = "Agent Identity Security Control Plane - RAG Core Service"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "sentence-transformers>=3.0.0",
+    "psycopg2-binary>=2.9.9",
+    "pgvector>=0.3.0",
+    "opensearch-py>=2.5.0",
+    "httpx>=0.27.0",
+    "pypdf>=4.2.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.2.0",
+    "redis>=5.0.4",
+    "opentelemetry-sdk>=1.24.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.24.0",
+    "google-cloud-aiplatform>=1.54.0",
+    "google-cloud-storage>=2.16.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "mypy>=1.10.0",
+    "ruff>=0.4.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rag_core"]

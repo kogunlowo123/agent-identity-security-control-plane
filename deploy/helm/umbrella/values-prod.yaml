@@ -1,0 +1,24 @@
+global:
+  environment: prod
+  gcpProject: aicp-prod-project
+  region: us-central1
+
+agent-runtime:
+  replicaCount: 3
+  image:
+    tag: "0.1.0"
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+
+ragCore:
+  enabled: true
+  replicaCount: 2

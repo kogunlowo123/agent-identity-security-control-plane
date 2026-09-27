@@ -1,0 +1,72 @@
+gateway:
+  name: aicp-llm-gateway
+  version: "1.0"
+  listen:
+    host: "0.0.0.0"
+    port: 8090
+
+providers:
+  - name: vertex-ai
+    type: vertex_ai
+    priority: 1
+    models:
+      - gemini-1.5-pro
+      - gemini-1.5-flash
+    auth:
+      type: workload_identity
+      project_id: "${GCP_PROJECT_ID}"
+      location: us-central1
+    rate_limits:
+      requests_per_minute: 600
+      tokens_per_minute: 1000000
+    retry:
+      max_attempts: 3
+      backoff_factor: 2
+
+  - name: openai
+    type: openai
+    priority: 2
+    models:
+      - gpt-4o
+      - gpt-4o-mini
+    auth:
+      type: api_key
+      env_var: OPENAI_API_KEY
+    rate_limits:
+      requests_per_minute: 500
+      tokens_per_minute: 500000
+    retry:
+      max_attempts: 2
+      backoff_factor: 1.5
+
+  - name: anthropic
+    type: anthropic
+    priority: 3
+    models:
+      - claude-3-5-sonnet-20241022
+    auth:
+      type: api_key
+      env_var: ANTHROPIC_API_KEY
+    rate_limits:
+      requests_per_minute: 200
+      tokens_per_minute: 200000
+
+budgets:
+  T0:
+    tokens_per_session: 200000
+    cost_per_session_usd: 10.0
+  T1:
+    tokens_per_session: 100000
+    cost_per_session_usd: 5.0
+  T2:
+    tokens_per_session: 50000
+    cost_per_session_usd: 2.0
+  T3:
+    tokens_per_session: 10000
+    cost_per_session_usd: 0.5
+
+audit:
+  enabled: true
+  log_requests: true
+  log_responses: false
+  pii_scrub: true

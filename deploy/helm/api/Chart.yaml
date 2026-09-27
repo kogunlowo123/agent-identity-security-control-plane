@@ -1,0 +1,12 @@
+apiVersion: v2
+name: aicp-api
+description: Agent Identity Security Control Plane - API Service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - identity
+  - spiffe
+  - jwt
+  - security
+home: https://github.com/kogunlowo123/agent-identity-security-control-plane

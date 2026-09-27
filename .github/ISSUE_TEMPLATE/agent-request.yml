@@ -1,0 +1,35 @@
+name: Agent Feature Request
+description: Request a new agent or new capabilities for an existing agent
+labels: ["agent-request", "enhancement"]
+body:
+  - type: input
+    id: agent-name
+    attributes:
+      label: Agent Name
+      placeholder: "my-new-agent"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Requested Tier
+      options: [T0, T1, T2, T3]
+    validations:
+      required: true
+
+  - type: textarea
+    id: purpose
+    attributes:
+      label: Purpose and Capabilities
+      description: What will this agent do? What capabilities does it need?
+    validations:
+      required: true
+
+  - type: textarea
+    id: security-rationale
+    attributes:
+      label: Security Rationale
+      description: Why does this agent need the requested tier and capabilities?
+    validations:
+      required: true

@@ -1,0 +1,29 @@
+title: Agent Token Burn Rate Anomaly
+id: b7a1c2d3-4e5f-6789-abcd-ef0123456789
+status: stable
+description: Detects abnormally high token issuance rate for a single agent identity, which may indicate credential stuffing, token flooding, or a compromised agent.
+references:
+  - https://attack.mitre.org/techniques/T1110/
+author: platform-security
+date: 2024/01/01
+tags:
+  - attack.credential_access
+  - attack.t1110
+logsource:
+  category: application
+  product: aicp
+  service: identity-broker
+detection:
+  selection:
+    event_type: token.issued
+  timeframe: 5m
+  condition: selection | count(agent_id) by agent_id > 100
+fields:
+  - agent_id
+  - tier
+  - spiffe_id
+  - client_ip
+  - event_count
+falsepositives:
+  - Legitimate high-throughput agents during load tests
+level: high

@@ -1,0 +1,27 @@
+broker:
+  trust_domain: agent-identity-security-control-plane
+  jwt_issuer: https://aicp.example.com
+  jwt_audience: aicp-api
+  signing:
+    algorithm: RS256
+    key_path: /etc/aicp/keys/signing.pem
+    key_id_length: 16
+
+opa:
+  url: http://opa:8181
+  policy_path: /v1/data/identity/allow_issuance
+  timeout_seconds: 5
+  fail_open: false  # Set to true only for degraded mode
+
+spire:
+  socket_path: /tmp/spire-agent/public/api.sock
+  trust_domain: agent-identity-security-control-plane
+
+telemetry:
+  otel_endpoint: ""
+  service_name: aicp-broker
+  service_version: 0.1.0
+
+logging:
+  level: INFO
+  format: json
