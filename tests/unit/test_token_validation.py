@@ -215,12 +215,20 @@ class TestMissingClaims:
         from broker import _private_key
         pub = _private_key.public_key()  # type: ignore[union-attr]
         token = self._issue_without_claim("exp")
-        with pytest.raises(pyjwt.exceptions.DecodeError):
-            pyjwt.decode(token, pub, algorithms=["RS256"], audience=settings.jwt_audience)
+        # Require exp explicitly; PyJWT raises MissingRequiredClaimError (subclass of DecodeError)
+        with pytest.raises(pyjwt.exceptions.MissingRequiredClaimError):
+            pyjwt.decode(
+                token,
+                pub,
+                algorithms=["RS256"],
+                audience=settings.jwt_audience,
+                options={"require": ["exp"]},
+            )
 
     def test_missing_aud_raises_invalid_claims(self) -> None:
         from broker import _private_key
         pub = _private_key.public_key()  # type: ignore[union-attr]
         token = self._issue_without_claim("aud")
-        with pytest.raises(pyjwt.exceptions.InvalidAudienceError):
+        # When audience is expected but missing, PyJWT raises MissingRequiredClaimError
+        with pytest.raises(pyjwt.exceptions.MissingRequiredClaimError):
             pyjwt.decode(token, pub, algorithms=["RS256"], audience=settings.jwt_audience)
