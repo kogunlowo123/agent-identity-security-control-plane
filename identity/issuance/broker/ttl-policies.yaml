@@ -1,0 +1,38 @@
+ttl_policies:
+  T0:
+    max_ttl_seconds: 3600
+    default_ttl_seconds: 3600
+    description: "Highest trust tier — infrastructure agents, max 1 hour"
+    rotation_required: true
+    rotation_interval_seconds: 1800
+    allow_renewal: true
+
+  T1:
+    max_ttl_seconds: 1800
+    default_ttl_seconds: 1800
+    description: "High trust tier — audit and registration agents, max 30 minutes"
+    rotation_required: true
+    rotation_interval_seconds: 900
+    allow_renewal: true
+
+  T2:
+    max_ttl_seconds: 900
+    default_ttl_seconds: 900
+    description: "Medium trust tier — standard agents, max 15 minutes"
+    rotation_required: false
+    rotation_interval_seconds: 0
+    allow_renewal: false
+
+  T3:
+    max_ttl_seconds: 300
+    default_ttl_seconds: 300
+    description: "Low trust tier — ephemeral agents, max 5 minutes"
+    rotation_required: false
+    rotation_interval_seconds: 0
+    allow_renewal: false
+
+enforcement:
+  reject_requests_exceeding_max: true
+  cap_ttl_silently: true
+  log_all_decisions: true
+  emit_cloudevents: true

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DelegationChain",
+  "type": "object",
+  "required": ["chain_id", "links", "depth", "root_delegator", "terminal_delegate", "not_after"],
+  "properties": {
+    "chain_id": { "type": "string", "format": "uuid" },
+    "links": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["delegator", "delegate", "delegator_tier", "capabilities", "not_before", "not_after", "jti", "signature"],
+        "properties": {
+          "delegator": { "type": "string", "pattern": "^spiffe://" },
+          "delegate": { "type": "string", "pattern": "^spiffe://" },
+          "delegator_tier": { "type": "string", "enum": ["T0", "T1", "T2", "T3"] },
+          "delegate_tier": { "type": "string", "enum": ["T0", "T1", "T2", "T3"] },
+          "capabilities": { "type": "array", "items": { "type": "string" } },
+          "not_before": { "type": "integer" },
+          "not_after": { "type": "integer" },
+          "jti": { "type": "string", "format": "uuid" },
+          "signature": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "depth": { "type": "integer", "minimum": 1 },
+    "root_delegator": { "type": "string", "pattern": "^spiffe://" },
+    "terminal_delegate": { "type": "string", "pattern": "^spiffe://" },
+    "not_after": { "type": "integer" },
+    "valid": { "type": "boolean" }
+  }
+}

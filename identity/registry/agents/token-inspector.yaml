@@ -1,0 +1,27 @@
+id: token-inspector
+name: Token Inspector
+description: >
+  Validates JWT token claims, checks expiry times, verifies signatures,
+  and reports anomalies such as unexpected scopes or near-expiry tokens.
+  Highest trust tier T0 with access to the token revocation API.
+spiffe_id: spiffe://agent-identity-security-control-plane/token-inspector
+tier: T0
+status: active
+capabilities:
+  - validate_tokens
+  - check_expiry
+  - report_anomalies
+  - access_revocation_api
+  - inspect_token_claims
+authorized_tools:
+  - token_validate
+  - revocation_check
+  - jwks_fetch
+max_delegation_depth: 0
+metadata:
+  team: security-platform
+  owner: kogunlowo123
+  environment: production
+  langgraph_graph: token_inspection_graph
+created_at: "2024-01-01T00:00:00Z"
+updated_at: "2024-01-01T00:00:00Z"

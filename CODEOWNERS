@@ -1,0 +1,32 @@
+# CODEOWNERS
+# Each line is a file pattern followed by one or more owners.
+# Order matters: the last matching pattern takes precedence.
+
+# Default owner for everything
+* @kogunlowo123
+
+# Infrastructure
+/infra/ @kogunlowo123
+/deploy/ @kogunlowo123
+
+# Security-sensitive paths require explicit approval
+/security/ @kogunlowo123
+/identity/authorization/ @kogunlowo123
+/identity/issuance/ @kogunlowo123
+/.github/workflows/ @kogunlowo123
+
+# Services
+/services/api/ @kogunlowo123
+/services/agent-runtime/ @kogunlowo123
+/services/rag-core/ @kogunlowo123
+
+# Identity
+/identity/ @kogunlowo123
+
+# Tests
+/tests/ @kogunlowo123
+/evals/ @kogunlowo123
+
+# Documentation
+/docs/ @kogunlowo123
+*.md @kogunlowo123

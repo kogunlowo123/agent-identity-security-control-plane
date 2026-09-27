@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /services/api
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      fastapi:
+        patterns: ["fastapi*", "uvicorn*", "starlette*"]
+      otel:
+        patterns: ["opentelemetry*"]
+
+  - package-ecosystem: pip
+    directory: /services/agent-runtime
+    schedule:
+      interval: weekly
+      day: monday
+
+  - package-ecosystem: pip
+    directory: /services/rag-core
+    schedule:
+      interval: weekly
+      day: monday
+
+  - package-ecosystem: pip
+    directory: /identity/issuance/broker
+    schedule:
+      interval: weekly
+      day: monday
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["actions/*", "google-github-actions/*"]

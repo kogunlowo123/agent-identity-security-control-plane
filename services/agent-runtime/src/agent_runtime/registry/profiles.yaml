@@ -1,0 +1,30 @@
+profiles:
+  - agent_id: identity-auditor
+    enabled: true
+    replica_count: 2
+    resource_requests:
+      cpu: "250m"
+      memory: "512Mi"
+    resource_limits:
+      cpu: "1"
+      memory: "1Gi"
+
+  - agent_id: token-inspector
+    enabled: true
+    replica_count: 3
+    resource_requests:
+      cpu: "500m"
+      memory: "1Gi"
+    resource_limits:
+      cpu: "2"
+      memory: "2Gi"
+
+  - agent_id: spiffe-registrar
+    enabled: true
+    replica_count: 2
+    resource_requests:
+      cpu: "250m"
+      memory: "512Mi"
+    resource_limits:
+      cpu: "1"
+      memory: "1Gi"

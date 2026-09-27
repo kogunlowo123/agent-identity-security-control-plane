@@ -1,0 +1,25 @@
+delegation_depth_limits:
+  T0:
+    max_depth: 0
+    description: "Highest trust — cannot delegate (infrastructure agents)"
+    rationale: "T0 agents have maximum system access; delegation would allow privilege escalation"
+
+  T1:
+    max_depth: 2
+    description: "High trust — can delegate up to 2 hops"
+    rationale: "T1 agents (audit, registration) may need to spawn sub-agents for complex workflows"
+
+  T2:
+    max_depth: 1
+    description: "Medium trust — can delegate 1 hop only"
+    rationale: "T2 agents may delegate to worker agents but cannot build deep chains"
+
+  T3:
+    max_depth: 0
+    description: "Low trust — cannot delegate"
+    rationale: "T3 ephemeral agents should not propagate authority"
+
+enforcement:
+  check_at_issuance: true
+  check_at_validation: true
+  reject_deep_chains: true

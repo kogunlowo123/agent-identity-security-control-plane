@@ -1,0 +1,45 @@
+tool_scopes:
+  rag_search:
+    required_capabilities:
+      - rag:search
+    allowed_tiers:
+      - T0
+      - T1
+      - T2
+      - T3
+    description: Search the RAG knowledge base for relevant context
+
+  identity_query:
+    required_capabilities:
+      - identity:read
+    allowed_tiers:
+      - T0
+      - T1
+      - T2
+    description: Query agent identity records and metadata
+
+  session_read:
+    required_capabilities:
+      - identity:read
+    allowed_tiers:
+      - T0
+      - T1
+      - T2
+      - T3
+    description: Read session state and history
+
+  token_validate:
+    required_capabilities:
+      - token:validate
+    allowed_tiers:
+      - T0
+      - T1
+    description: Validate JWT token signatures and claims
+
+  token_revoke:
+    required_capabilities:
+      - token:revoke
+    allowed_tiers:
+      - T0
+    description: Revoke a JWT token by JTI (requires human approval)
+    requires_approval: true

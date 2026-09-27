@@ -1,0 +1,66 @@
+---
+# Wave 0: Infrastructure (CRDs, namespaces, RBAC)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aicp-infra
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kogunlowo123/agent-identity-security-control-plane.git
+    targetRevision: main
+    path: deploy/helm/infrastructure
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aicp-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+# Wave 1: Core services (OPA, SPIRE, identity broker)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aicp-core
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kogunlowo123/agent-identity-security-control-plane.git
+    targetRevision: main
+    path: deploy/helm/core
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aicp-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+# Wave 2: Application services (API, agent-runtime, rag-core)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aicp-services
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kogunlowo123/agent-identity-security-control-plane.git
+    targetRevision: main
+    path: deploy/helm/services
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aicp
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

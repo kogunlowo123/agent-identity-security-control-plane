@@ -1,0 +1,30 @@
+title: Agent Scope Violation Detected
+id: a1b2c3d4-e5f6-7890-abcd-ef0123456780
+status: stable
+description: Detects when an agent attempts to access a resource or capability outside its declared scope, indicating possible privilege escalation or compromised agent behavior.
+references:
+  - https://attack.mitre.org/techniques/T1078/
+author: platform-security
+date: 2024/01/01
+tags:
+  - attack.privilege_escalation
+  - attack.t1078
+logsource:
+  category: application
+  product: aicp
+  service: identity-api
+detection:
+  selection:
+    event_type: authorization.denied
+    reason: scope_violation
+  condition: selection
+fields:
+  - agent_id
+  - tier
+  - spiffe_id
+  - requested_capability
+  - allowed_capabilities
+  - client_ip
+falsepositives:
+  - Misconfigured agent capability lists during deployment
+level: critical

@@ -1,0 +1,14 @@
+apiVersion: v2
+name: aicp-umbrella
+description: AICP Umbrella Helm chart — deploys all platform services
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+dependencies:
+  - name: agent-runtime
+    version: "0.1.0"
+    repository: "file://../agent-runtime"
+  - name: rag-core
+    version: "0.1.0"
+    repository: "oci://gcr.io/aicp-project/charts"
+    condition: ragCore.enabled

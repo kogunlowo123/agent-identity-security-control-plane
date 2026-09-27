@@ -1,0 +1,36 @@
+routing:
+  default_provider: vertex-ai
+  fallback_chain:
+    - vertex-ai
+    - openai
+    - anthropic
+
+  model_routing:
+    - model_pattern: "gemini*"
+      provider: vertex-ai
+    - model_pattern: "gpt*"
+      provider: openai
+    - model_pattern: "claude*"
+      provider: anthropic
+
+  tier_routing:
+    T0:
+      preferred_provider: vertex-ai
+      allowed_models:
+        - gemini-1.5-pro
+        - gpt-4o
+    T1:
+      preferred_provider: vertex-ai
+      allowed_models:
+        - gemini-1.5-pro
+        - gemini-1.5-flash
+        - gpt-4o-mini
+    T2:
+      preferred_provider: vertex-ai
+      allowed_models:
+        - gemini-1.5-flash
+        - gpt-4o-mini
+    T3:
+      preferred_provider: vertex-ai
+      allowed_models:
+        - gemini-1.5-flash

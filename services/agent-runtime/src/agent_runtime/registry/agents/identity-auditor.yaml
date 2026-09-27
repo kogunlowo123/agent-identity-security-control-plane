@@ -1,0 +1,34 @@
+agent_id: identity-auditor
+display_name: Identity Auditor
+description: >
+  Audits agent identity records, validates SPIFFE IDs against registered workloads,
+  and generates compliance reports for agentic identity posture.
+spiffe_id: spiffe://agent-identity-security-control-plane/agents/identity-auditor
+tier: T1
+capabilities:
+  - identity:read
+  - identity:audit
+  - delegation:read
+  - rag:search
+  - report:write
+max_ttl: 1800
+max_delegation_depth: 2
+tools:
+  - rag_search
+  - identity_query
+  - session_read
+allowed_data_classifications:
+  - public
+  - internal
+  - confidential
+rate_limits:
+  requests_per_minute: 500
+  tokens_per_minute: 100000
+metadata:
+  owner_team: platform-security
+  contact: platform-security@example.com
+  created_at: "2024-01-01"
+  tags:
+    - identity
+    - audit
+    - compliance

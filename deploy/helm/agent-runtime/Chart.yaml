@@ -1,0 +1,10 @@
+apiVersion: v2
+name: agent-runtime
+description: AICP Agent Runtime Service Helm chart
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+maintainers:
+  - name: platform-security
+    email: platform-security@example.com
+dependencies: []

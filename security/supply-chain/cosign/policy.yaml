@@ -1,0 +1,18 @@
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: aicp-require-signed-images
+spec:
+  images:
+    - glob: "gcr.io/aicp-*/**"
+    - glob: "us-central1-docker.pkg.dev/aicp-*/**"
+  authorities:
+    - name: keyless-github-actions
+      keyless:
+        url: https://fulcio.sigstore.dev
+        identities:
+          - issuerRegExp: "https://token.actions.githubusercontent.com"
+            subjectRegExp: "https://github.com/kogunlowo123/agent-identity-security-control-plane/.github/workflows/release.yml@refs/heads/main"
+      ctlog:
+        url: https://rekor.sigstore.dev
+        threshold: 1

@@ -1,0 +1,38 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aicp-revocation-latency
+  namespace: aicp
+  labels:
+    prometheus: aicp
+    role: alert-rules
+spec:
+  groups:
+    - name: aicp.revocation-latency
+      rules:
+        - alert: AICPRevocationLatencyHigh
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(aicp_token_revocation_duration_seconds_bucket[5m])) by (le)
+            ) > 1.0
+          for: 3m
+          labels:
+            severity: critical
+            team: security-platform
+          annotations:
+            summary: "Token revocation p99 latency > 1 second"
+            description: |
+              Token revocation is taking more than 1 second at p99.
+              This means revoked tokens may still be accepted for up to 1s.
+              Investigate the revocation API and Pub/Sub delivery.
+
+        - alert: AICPRevocationAPIDown
+          expr: |
+            up{job="aicp-revocation-api"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            team: security-platform
+          annotations:
+            summary: "Token revocation API is down"
+            description: "The token revocation API is not responding. Compromised tokens cannot be revoked."

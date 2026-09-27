@@ -1,0 +1,30 @@
+version: "3.9"
+# Copy this file to docker-compose.override.yml for local development overrides.
+# docker-compose.override.yml is gitignored.
+
+services:
+  api:
+    volumes:
+      - ./services/api/src:/app/src:ro
+    environment:
+      - APP_DEBUG=true
+      - APP_LOG_LEVEL=DEBUG
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  agent-runtime:
+    volumes:
+      - ./services/agent-runtime/src:/app/src:ro
+    environment:
+      - APP_DEBUG=true
+
+  rag-core:
+    volumes:
+      - ./services/rag-core/src:/app/src:ro
+    environment:
+      - APP_DEBUG=true
+
+  broker:
+    volumes:
+      - ./identity/issuance/broker:/app:ro
+    environment:
+      - APP_DEBUG=true

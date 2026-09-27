@@ -1,0 +1,168 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # ── Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run ruff check (all services)
+        run: |
+          uv run ruff check services/api/src/ services/agent-runtime/src/ services/rag-core/src/ identity/issuance/broker/ identity/session/revocation/
+          uv run ruff format --check services/api/src/ services/agent-runtime/src/ services/rag-core/src/
+
+  # ── Type Check ───────────────────────────────────────────────────────────
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install API service dependencies
+        working-directory: services/api
+        run: uv sync
+
+      - name: Run mypy on API service
+        working-directory: services/api
+        run: uv run mypy src/
+
+  # ── Unit Tests ────────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install broker dependencies
+        run: |
+          uv pip install \
+            fastapi>=0.111.0 \
+            uvicorn>=0.29.0 \
+            pydantic>=2.7.0 \
+            pydantic-settings>=2.3.0 \
+            PyJWT>=2.8.0 \
+            cryptography>=42.0.0 \
+            httpx>=0.27.0 \
+            opentelemetry-sdk>=1.24.0 \
+            "opentelemetry-exporter-otlp-proto-grpc>=1.24.0" \
+            pytest>=8.0.0 \
+            pytest-asyncio>=0.23.0 \
+            pytest-cov>=5.0.0
+
+      - name: Run unit tests with coverage
+        run: |
+          uv run pytest tests/unit/ \
+            -v \
+            --tb=short \
+            -x \
+            --cov=identity/issuance/broker \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=70
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+
+  # ── Security Tests ────────────────────────────────────────────────────────
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          uv pip install \
+            PyJWT>=2.8.0 \
+            cryptography>=42.0.0 \
+            pydantic-settings>=2.3.0 \
+            httpx>=0.27.0 \
+            opentelemetry-sdk>=1.24.0 \
+            "opentelemetry-exporter-otlp-proto-grpc>=1.24.0" \
+            pytest>=8.0.0 \
+            pytest-asyncio>=0.23.0
+
+      - name: Run security tests
+        run: |
+          uv run pytest tests/security/ -v --tb=short -m security
+
+  # ── Integration Tests (with services) ────────────────────────────────────
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, security-tests]
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: aicp_user
+          POSTGRES_PASSWORD: aicp_pass
+          POSTGRES_DB: aicp_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install API service
+        working-directory: services/api
+        run: uv sync
+
+      - name: Run integration tests
+        working-directory: services/api
+        env:
+          DATABASE_URL: postgresql://aicp_user:aicp_pass@localhost:5432/aicp_db
+          JWT_AUDIENCE: aicp-api
+          JWT_ISSUER: https://aicp.example.com
+          BROKER_URL: http://localhost:8100
+          OPA_URL: http://localhost:8181
+        run: |
+          uv run pytest ../../tests/integration/ \
+            -v \
+            --tb=short \
+            -m integration \
+            --asyncio-mode=auto

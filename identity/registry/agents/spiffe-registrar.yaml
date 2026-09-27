@@ -1,0 +1,25 @@
+agent_id: spiffe-registrar
+display_name: SPIFFE Registrar
+description: >
+  Manages SPIFFE workload entry lifecycle in the SPIRE server registry.
+  Creates, updates, and deactivates workload entries on behalf of service teams.
+spiffe_id: spiffe://agent-identity-security-control-plane/agents/spiffe-registrar
+tier: T1
+capabilities:
+  - identity:write
+  - identity:read
+  - spire:entry:create
+  - spire:entry:update
+  - spire:entry:delete
+  - registry:write
+max_ttl: 1800
+max_delegation_depth: 2
+trust_domain: agent-identity-security-control-plane
+metadata:
+  owner_team: platform-security
+  contact: platform-security@example.com
+  created_at: "2024-01-01"
+  tags:
+    - spiffe
+    - registration
+    - workload-identity

@@ -1,0 +1,63 @@
+replicaCount: 2
+
+image:
+  repository: gcr.io/your-project/aicp-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  name: "api"
+  annotations:
+    iam.gke.io/gcp-service-account: aicp-api@your-project.iam.gserviceaccount.com
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.aicp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+env:
+  APP_ENV: production
+  API_PORT: "8000"
+  OPA_URL: http://opa:8181
+  BROKER_URL: http://aicp-broker:8100
+
+envFrom:
+  - secretRef:
+      name: aicp-api-secrets
+
+livenessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /api/v1/readiness
+    port: 8000
+  initialDelaySeconds: 15
+  periodSeconds: 10

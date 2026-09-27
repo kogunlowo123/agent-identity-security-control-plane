@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aicp.example.com/schemas/agent-identity/v1",
+  "title": "AgentIdentity",
+  "description": "Schema for AI agent identity registry entries",
+  "type": "object",
+  "required": ["id", "name", "tier", "status", "spiffe_id", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique agent identifier (UUID or slug)",
+      "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+      "minLength": 3,
+      "maxLength": 64
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable agent name",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "description": {
+      "type": "string",
+      "description": "Purpose and responsibilities of this agent",
+      "maxLength": 1024
+    },
+    "spiffe_id": {
+      "type": "string",
+      "description": "Full SPIFFE ID: spiffe://<trust-domain>/<path>",
+      "pattern": "^spiffe://[a-z0-9.-]+/[a-z0-9/._-]+$"
+    },
+    "tier": {
+      "type": "string",
+      "description": "Trust tier determining token TTL and delegation depth",
+      "enum": ["T0", "T1", "T2", "T3"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Current operational status",
+      "enum": ["active", "suspended", "revoked", "pending"]
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "List of authorized capabilities",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "uniqueItems": true
+    },
+    "authorized_tools": {
+      "type": "array",
+      "description": "List of tools this agent is authorized to call",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "max_delegation_depth": {
+      "type": "integer",
+      "description": "Maximum allowed delegation chain depth from this agent",
+      "minimum": 0,
+      "maximum": 5
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata key-value pairs",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO 8601 creation timestamp",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "ISO 8601 last update timestamp",
+      "format": "date-time"
+    },
+    "revoked_at": {
+      "type": "string",
+      "description": "ISO 8601 revocation timestamp (only present if status=revoked)",
+      "format": "date-time"
+    },
+    "revocation_reason": {
+      "type": "string",
+      "description": "Reason for revocation",
+      "maxLength": 512
+    }
+  }
+}
