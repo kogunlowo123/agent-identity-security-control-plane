@@ -261,6 +261,8 @@ async def validate_identity(request: ValidateRequest) -> ValidateResponse:
             claims = decode_token_from_jwks(request.token, jwks)
         except HTTPException as exc:
             return ValidateResponse(valid=False, error=str(exc.detail))
+        except Exception as exc:
+            return ValidateResponse(valid=False, error=str(exc))
 
         # Check required_tier constraint
         if request.required_tier:

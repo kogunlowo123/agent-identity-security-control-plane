@@ -118,7 +118,8 @@ class TestIdentityIssuance:
         with patch("api.routes.v1.identities.httpx.AsyncClient") as mock_httpx:
             mock_resp = AsyncMock()
             mock_resp.status_code = 201
-            mock_resp.json.return_value = mock_response
+            # json() is a synchronous method on httpx.Response — use MagicMock
+            mock_resp.json = MagicMock(return_value=mock_response)
             mock_resp.raise_for_status = MagicMock()
 
             mock_client_instance = AsyncMock()

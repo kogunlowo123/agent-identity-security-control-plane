@@ -222,10 +222,15 @@ class TestTokenSignatureVerification:
     def test_tampered_token_fails_verification(self, valid_spiffe_id: str, valid_agent_id: str) -> None:
         from broker import _private_key
         token, _, _ = issue_jwt(valid_spiffe_id, "T1", valid_agent_id)
-        # Tamper: flip last char
-        tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+        # Tamper: flip a character in the middle of the signature segment
+        # (avoid flipping the last char, which may cause base64 padding errors)
+        parts = token.split(".")
+        sig = parts[2]
+        mid = len(sig) // 2
+        tampered_sig = sig[:mid] + ("A" if sig[mid] != "A" else "B") + sig[mid + 1:]
+        tampered = ".".join(parts[:2] + [tampered_sig])
         pub_key = _private_key.public_key()  # type: ignore[union-attr]
-        with pytest.raises(pyjwt.InvalidSignatureError):
+        with pytest.raises((pyjwt.InvalidSignatureError, pyjwt.DecodeError)):
             pyjwt.decode(tampered, pub_key, algorithms=["RS256"], audience=settings.jwt_audience)
 
     def test_wrong_key_fails_verification(self, valid_spiffe_id: str, valid_agent_id: str) -> None:
